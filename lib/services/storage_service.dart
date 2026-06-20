@@ -15,9 +15,9 @@ class StorageService {
     final ext = file.path.split('.').last;
     final path = '$userId/$speciesId/$levelKey.$ext';
     await _client.storage
-        .from(storageBucket)
+        .from(SupabaseConfig.storageBucket)
         .upload(path, file, fileOptions: const FileOptions(upsert: true));
-    return _client.storage.from(storageBucket).getPublicUrl(path);
+    return _client.storage.from(SupabaseConfig.storageBucket).getPublicUrl(path);
   }
 
   Future<void> deletePhoto({
@@ -29,7 +29,7 @@ class StorageService {
     for (final ext in ['jpg', 'jpeg', 'png', 'heic']) {
       try {
         await _client.storage
-            .from(storageBucket)
+            .from(SupabaseConfig.storageBucket)
             .remove(['$userId/$speciesId/$levelKey.$ext']);
       } catch (_) {}
     }
