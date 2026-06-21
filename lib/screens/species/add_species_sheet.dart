@@ -63,6 +63,7 @@ class _AddSpeciesSheetState extends ConsumerState<_AddSpeciesSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final s = ref.watch(appStringsProvider);
     return Padding(
       padding: EdgeInsets.fromLTRB(
           20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
@@ -72,7 +73,6 @@ class _AddSpeciesSheetState extends ConsumerState<_AddSpeciesSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Handle
             Center(
               child: Container(
                 width: 40,
@@ -84,46 +84,38 @@ class _AddSpeciesSheetState extends ConsumerState<_AddSpeciesSheet> {
                 ),
               ),
             ),
-            const Text('Add Species',
-                style:
-                    TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(s.addSpeciesTitle,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             TextFormField(
               controller: _commonNameCtrl,
-              decoration:
-                  const InputDecoration(labelText: 'English Name *'),
+              decoration: InputDecoration(labelText: s.englishNameLabel),
               validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Required' : null,
+                  v == null || v.trim().isEmpty ? s.required : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _chineseNameCtrl,
-              decoration:
-                  const InputDecoration(labelText: 'Chinese Name (中文名)'),
+              decoration: InputDecoration(labelText: s.chineseNameLabel),
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _scientificNameCtrl,
-              decoration: const InputDecoration(
-                  labelText: 'Scientific Name',
-                  hintText: 'e.g. Accipiter gentilis'),
+              decoration: InputDecoration(
+                  labelText: s.scientificNameLabel,
+                  hintText: s.scientificNameHint),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               value: _selectedFamily,
-              decoration:
-                  const InputDecoration(labelText: 'Family Group'),
-              hint: const Text('Select family'),
+              decoration: InputDecoration(labelText: s.familyGroupLabel),
+              hint: Text(s.selectFamily),
               items: [
                 ...kFamilyOrder.map((f) => DropdownMenuItem(
                       value: f,
-                      child: Text(
-                          '${kFamilyChineseNames[f] ?? f}  ·  $f'),
+                      child: Text('${kFamilyChineseNames[f] ?? f}  ·  $f'),
                     )),
-                const DropdownMenuItem(
-                  value: 'Other',
-                  child: Text('Other'),
-                ),
+                const DropdownMenuItem(value: 'Other', child: Text('Other')),
               ],
               onChanged: (v) => setState(() => _selectedFamily = v),
             ),
@@ -135,8 +127,7 @@ class _AddSpeciesSheetState extends ConsumerState<_AddSpeciesSheet> {
                 onPressed: _saving ? null : _save,
                 child: _saving
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Add to My Journal',
-                        style: TextStyle(fontSize: 16)),
+                    : Text(s.addToJournal, style: const TextStyle(fontSize: 16)),
               ),
             ),
           ],

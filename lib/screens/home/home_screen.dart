@@ -19,9 +19,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await ref.read(supabaseProvider).auth.signOut();
   }
 
+  void _cycleLocale() {
+    final current = ref.read(localeProvider);
+    final locales = supportedLocales;
+    final idx = locales.indexWhere((l) => l.languageCode == current.languageCode);
+    final next = locales[(idx + 1) % locales.length];
+    ref.read(localeProvider.notifier).state = next;
+  }
+
+  String _localeLabel(String code) {
+    switch (code) {
+      case 'zh': return '中文';
+      case 'fr': return 'FR';
+      default: return 'EN';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider).value;
+    final s = ref.watch(appStringsProvider);
+    final locale = ref.watch(localeProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -36,22 +54,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           if (_tab == 0)
             IconButton(
               icon: const Icon(Icons.add),
-              tooltip: 'Add species',
+              tooltip: s.addSpecies,
               onPressed: () => showAddSpeciesSheet(context),
             ),
+          TextButton(
+            onPressed: _cycleLocale,
+            child: Text(_localeLabel(locale.languageCode),
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+          ),
           PopupMenuButton(
             itemBuilder: (_) => [
               PopupMenuItem(
                 child: Text(user?.email ?? 'Account'),
                 enabled: false,
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'signout',
                 child: Row(
                   children: [
-                    Icon(Icons.logout, size: 18),
-                    SizedBox(width: 8),
-                    Text('Sign Out'),
+                    const Icon(Icons.logout, size: 18),
+                    const SizedBox(width: 8),
+                    Text(s.signOut),
                   ],
                 ),
               ),
@@ -72,16 +95,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.grid_view_outlined),
-            selectedIcon: Icon(Icons.grid_view),
-            label: 'Field Journal',
+            icon: const Icon(Icons.grid_view_outlined),
+            selectedIcon: const Icon(Icons.grid_view),
+            label: s.fieldJournal,
           ),
           NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart),
-            label: 'Achievements',
+            icon: const Icon(Icons.bar_chart_outlined),
+            selectedIcon: const Icon(Icons.bar_chart),
+            label: s.achievementsTab,
           ),
         ],
       ),

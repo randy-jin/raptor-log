@@ -1,11 +1,27 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/species.dart';
 import '../models/achievement.dart';
 import '../core/constants.dart';
+import '../core/app_strings.dart';
 import '../services/species_service.dart';
 import '../services/achievement_service.dart';
 import '../services/storage_service.dart';
+
+// ─────────────────────────────────────────
+// Locale / i18n
+// ─────────────────────────────────────────
+
+const _supportedLocales = [Locale('en'), Locale('zh'), Locale('fr')];
+
+final localeProvider = StateProvider<Locale>((_) => const Locale('en'));
+
+final appStringsProvider = Provider<AppStrings>(
+  (ref) => AppStrings(ref.watch(localeProvider)),
+);
+
+List<Locale> get supportedLocales => _supportedLocales;
 
 // ─────────────────────────────────────────
 // Supabase client

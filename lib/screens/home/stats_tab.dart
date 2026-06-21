@@ -11,28 +11,26 @@ class StatsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(appStringsProvider);
     final stats = ref.watch(statsProvider);
     final achievements = ref.watch(achievementsProvider).value ?? {};
     final species = ref.watch(speciesListProvider).value ?? [];
 
     return CustomScrollView(
       slivers: [
-        // Achievement Dashboard
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '成就仪表盘',
-                  style: TextStyle(
+                Text(
+                  s.dashboardTitle,
+                  style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF2E7D32)),
                 ),
-                const Text('Achievement Dashboard',
-                    style: TextStyle(color: Colors.grey, fontSize: 13)),
                 const SizedBox(height: 16),
                 // 4 stat cards
                 GridView.count(
@@ -66,9 +64,8 @@ class StatsTab extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 24),
-                // Progress bar
-                const Text('Overall Progress',
-                    style: TextStyle(
+                Text(s.overallProgress,
+                    style: const TextStyle(
                         fontWeight: FontWeight.bold, fontSize: 14)),
                 const SizedBox(height: 10),
                 _OverallProgressBar(stats: stats),
@@ -94,9 +91,9 @@ class StatsTab extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text('数毛级 Master Shots',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 15)),
+                  Consumer(builder: (ctx, r, _) => Text(
+                      r.watch(appStringsProvider).masterShots,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15))),
                 ],
               ),
             ),
@@ -144,9 +141,9 @@ class StatsTab extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text('飞行照 Action Shots',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 15)),
+                  Consumer(builder: (ctx, r, _) => Text(
+                      r.watch(appStringsProvider).actionShots,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15))),
                 ],
               ),
             ),
@@ -185,7 +182,7 @@ class StatsTab extends ConsumerWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
+class _StatCard extends ConsumerWidget {
   final LevelInfo info;
   final int count;
   final int total;
@@ -194,7 +191,8 @@ class _StatCard extends StatelessWidget {
       {required this.info, required this.count, required this.total});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(appStringsProvider);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -226,7 +224,7 @@ class _StatCard extends StatelessWidget {
                 height: 1.1),
           ),
           Text(
-            'of $total species',
+            s.ofSpecies(count, total),
             style: TextStyle(fontSize: 11, color: Colors.grey[600]),
           ),
         ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../providers/app_providers.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -32,6 +33,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  void _cycleLocale() {
+    final current = ref.read(localeProvider);
+    final locales = supportedLocales;
+    final idx = locales.indexWhere((l) => l.languageCode == current.languageCode);
+    final next = locales[(idx + 1) % locales.length];
+    ref.read(localeProvider.notifier).state = next;
+  }
+
+  String _localeLabel(String code) {
+    switch (code) {
+      case 'zh': return '中文';
+      case 'fr': return 'FR';
+      default: return 'EN';
+    }
+  }
+
   @override
   void dispose() {
     _emailCtrl.dispose();
@@ -40,6 +57,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = ref.watch(appStringsProvider);
+    final locale = ref.watch(localeProvider);
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -47,8 +67,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: TextButton(
+                  onPressed: _cycleLocale,
+                  child: Text(_localeLabel(locale.languageCode),
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
               const Spacer(),
-              // Logo / Title
               const Text('🦅', style: TextStyle(fontSize: 64)),
               const SizedBox(height: 16),
               Text(
@@ -60,7 +87,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Track every raptor you photograph.\nFour levels. One obsession.',
+                '${s.tagline1}\n${s.tagline2}',
                 style: Theme.of(context)
                     .textTheme
                     .bodyLarge
@@ -71,9 +98,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 TextField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email address',
-                    prefixIcon: Icon(Icons.email_outlined),
+                  decoration: InputDecoration(
+                    labelText: s.emailLabel,
+                    prefixIcon: const Icon(Icons.email_outlined),
                   ),
                   onSubmitted: (_) => _sendMagicLink(),
                 ),
@@ -91,8 +118,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     onPressed: _loading ? null : _sendMagicLink,
                     child: _loading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('Send Magic Link',
-                            style: TextStyle(fontSize: 16)),
+                        : Text(s.sendMagicLink,
+                            style: const TextStyle(fontSize: 16)),
                   ),
                 ),
               ] else ...[
@@ -106,12 +133,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('✉️ Check your email!',
-                          style: TextStyle(
+                      Text(s.checkEmailTitle,
+                          style: const TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 16)),
                       const SizedBox(height: 8),
                       Text(
-                        'We sent a sign-in link to ${_emailCtrl.text}.\nTap the link to open the app.',
+                        s.checkEmailBody(_emailCtrl.text),
                         style: TextStyle(color: Colors.grey[700]),
                       ),
                     ],
@@ -120,15 +147,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => setState(() => _sent = false),
-                  child: const Text('Use a different email'),
+                  child: Text(s.useDifferentEmail),
                 ),
               ],
               const Spacer(),
-              Text(
-                'No password needed. No credit card. Free forever.',
-                style:
-                    TextStyle(fontSize: 12, color: Colors.grey[500]),
-                textAlign: TextAlign.center,
+              Center(
+                child: Text(
+                  s.noPassword,
+                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  textAlign: TextAlign.center,
+                ),
               ),
               const SizedBox(height: 8),
             ],

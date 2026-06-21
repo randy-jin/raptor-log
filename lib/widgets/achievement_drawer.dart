@@ -7,7 +7,6 @@ import '../core/constants.dart';
 import '../models/species.dart';
 import '../models/achievement.dart';
 import '../providers/app_providers.dart';
-import '../services/storage_service.dart';
 
 void showAchievementDrawer(BuildContext context, Species species) {
   showModalBottomSheet(
@@ -40,18 +39,15 @@ class _AchievementDrawerState extends ConsumerState<_AchievementDrawer> {
     final levelData = current.levels[level]!;
 
     if (levelData.unlocked) {
-      // Long-press is handled separately; tap on unlocked = view photo
       if (levelData.photoUrl != null) {
         _showPhotoViewer(levelData.photoUrl!);
       }
       return;
     }
 
-    // Confirm unlock
     final confirmed = await _confirmUnlock(level);
     if (!confirmed) return;
 
-    // Pick photo (optional)
     String? photoUrl;
     final pick = await ImagePicker().pickImage(
       source: ImageSource.gallery,
@@ -93,21 +89,22 @@ class _AchievementDrawerState extends ConsumerState<_AchievementDrawer> {
     final levelData = current.levels[level]!;
     if (!levelData.unlocked) return;
 
+    final s = ref.read(appStringsProvider);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Remove Achievement?'),
+        title: Text(s.removeAchievement),
         content: Text(
-          'Remove the "${levelInfo(level).labelEn}" badge for ${widget.species.commonName}?',
+          s.removeBody(levelInfo(level).labelEn, widget.species.commonName),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(s.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Remove', style: TextStyle(color: Colors.red)),
+            child: Text(s.remove, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -121,6 +118,7 @@ class _AchievementDrawerState extends ConsumerState<_AchievementDrawer> {
 
   Future<bool> _confirmUnlock(AchievementLevel level) async {
     final info = levelInfo(level);
+    final s = ref.read(appStringsProvider);
     return await showDialog<bool>(
           context: context,
           builder: (_) => AlertDialog(
@@ -136,7 +134,7 @@ class _AchievementDrawerState extends ConsumerState<_AchievementDrawer> {
                   child: Icon(info.icon, size: 16, color: Colors.white),
                 ),
                 const SizedBox(width: 10),
-                Text('Unlock ${info.labelEn}?'),
+                Text(s.unlockTitle(info.labelEn)),
               ],
             ),
             content: Column(
@@ -148,21 +146,21 @@ class _AchievementDrawerState extends ConsumerState<_AchievementDrawer> {
                 Text(info.descriptionZh,
                     style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                 const SizedBox(height: 12),
-                const Text(
-                  'You can optionally upload a proof photo next.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                Text(
+                  s.photoOptional,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
+                child: Text(s.cancel),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(context, true),
                 style: FilledButton.styleFrom(backgroundColor: info.color),
-                child: const Text('Unlock!'),
+                child: Text(s.unlock),
               ),
             ],
           ),
@@ -208,7 +206,6 @@ class _AchievementDrawerState extends ConsumerState<_AchievementDrawer> {
       expand: false,
       builder: (_, controller) => Column(
         children: [
-          // Handle
           Container(
             margin: const EdgeInsets.only(top: 12, bottom: 4),
             width: 40,
@@ -218,7 +215,6 @@ class _AchievementDrawerState extends ConsumerState<_AchievementDrawer> {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          // Header
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
             child: Row(
@@ -274,7 +270,6 @@ class _AchievementDrawerState extends ConsumerState<_AchievementDrawer> {
             ),
           ),
           const Divider(height: 24),
-          // Level tiles
           Expanded(
             child: ListView(
               controller: controller,
@@ -293,7 +288,6 @@ class _AchievementDrawerState extends ConsumerState<_AchievementDrawer> {
               }).toList(),
             ),
           ),
-          // Description
           if (widget.species.descriptionEn != null ||
               widget.species.descriptionZh != null)
             Container(
@@ -327,7 +321,7 @@ class _AchievementDrawerState extends ConsumerState<_AchievementDrawer> {
   }
 }
 
-class _LevelTile extends StatelessWidget {
+class _LevelTile extends ConsumerWidget {
   final LevelInfo info;
   final LevelData data;
   final bool isUploading;
@@ -343,7 +337,8 @@ class _LevelTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(appStringsProvider);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
@@ -363,7 +358,6 @@ class _LevelTile extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Badge circle
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
                   width: 48,
@@ -396,7 +390,6 @@ class _LevelTile extends StatelessWidget {
                         ),
                 ),
                 const SizedBox(width: 14),
-                // Text
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,7 +431,7 @@ class _LevelTile extends StatelessWidget {
                       if (data.unlockedAt != null) ...[
                         const SizedBox(height: 4),
                         Text(
-                          'Unlocked ${_formatDate(data.unlockedAt!)}',
+                          s.unlockedOn(_formatDate(data.unlockedAt!)),
                           style: TextStyle(
                               fontSize: 10, color: Colors.grey[500]),
                         ),
@@ -446,7 +439,6 @@ class _LevelTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Photo thumbnail or action hint
                 if (data.photoUrl != null)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
